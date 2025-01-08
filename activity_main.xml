@@ -96,16 +96,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
-    <Button
-        android:id="@+id/UploadButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Upload"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
-
     <!-- TextView -->
     <TextView
         android:id="@+id/textViewValues"
@@ -113,8 +103,8 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:text="Sensor Values"
-        android:textSize="12sp"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/UploadButton" />
+        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
