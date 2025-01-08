@@ -5,13 +5,22 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import org.w3c.dom.Text;
+
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager mSensorManager;
@@ -19,6 +28,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView textViewValues;
     private boolean isSensorsActive = false;
     private int activity_class = -1;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference storageReference;
 
     // temp
     private String accelerometerData, gravityData, gyroscopeData = "";
@@ -75,6 +86,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
+        // Database setting
+        // Firebase Storage 초기화
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
+
+        // CSV 파일 생성 및 업로드
+        Button uploadButton = findViewById(R.id.UploadButton);
+        uploadButton.setOnClickListener(v -> uploadCSVToFirebase());
+
         // TAG
         TAG = MainActivity.class.getName() + " " + Thread.currentThread().getName();
     }
@@ -94,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // 임시 실험을 위한 코드로 작성
     @Override
     public void onSensorChanged(SensorEvent event) {
-        long timestamp = event.timestamp / 1_000L; // conversion to microsec (확인 필요)
+        long timestamp = event.timestamp / 1_000L; // conversion to microsecond
         float[] value = event.values.clone();
 
         // 센서 타입별 데이터 포맷팅 및 할당
@@ -123,6 +143,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void findSelectedRadioButton(String radioButtonName) {
         String[] activities = {"Other", "Walking", "Running", "Standing", "Sitting", "Upstairs", "Downstairs"};
         activity_class = java.util.Arrays.asList(activities).indexOf(radioButtonName);
+    }
+
+    private void uploadCSVToFirebase() {
+        // CSV 파일 생성
+        File csvFile = createCSVFile();
+
+        if (csvFile != null) {
+            // Firebase Storage 경로 지정
+            StorageReference csvRef = storageReference.child("csv-files/data.csv");
+
+            // 파일 업로드
+            UploadTask uploadTask = csvRef.putFile(Uri.fromFile(csvFile));
+            uploadTask.addOnSuccessListener(taskSnapshot -> {
+                Log.d("FirebaseStorage", "CSV 파일 업로드 성공!");
+            }).addOnFailureListener(e -> {
+                Log.e("FirebaseStorage", "CSV 파일 업로드 실패: " + e.getMessage());
+            });
+        }
+    }
+
+    private File createCSVFile() {
+        File csvFile = new File(getFilesDir(), "data2.csv");
+
+        try (FileWriter writer = new FileWriter(csvFile)) {
+            // CSV 데이터 작성 (헤더 포함)
+            writer.append("Timestamp,Activity,X,Y,Z\n");
+            writer.append("123456789,Walking,0.12,0.34,0.56\n");
+            writer.append("123456789,Running,0.45,0.67,0.89\n");
+
+            Log.d("CSV", "CSV 파일 생성 성공: " + csvFile.getAbsolutePath());
+        } catch (IOException e) {
+            Log.e("CSV", "CSV 파일 생성 실패: " + e.getMessage());
+            return null;
+        }
+
+        return csvFile;
     }
 
     public void startSensor() {

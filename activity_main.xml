@@ -96,6 +96,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
+    <Button
+        android:id="@+id/UploadButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Upload"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
+
     <!-- TextView -->
     <TextView
         android:id="@+id/textViewValues"
@@ -106,5 +116,5 @@
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
+        app:layout_constraintTop_toBottomOf="@id/UploadButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
