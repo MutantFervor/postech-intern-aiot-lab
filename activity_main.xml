@@ -11,7 +11,7 @@
     <RadioGroup
         android:id="@+id/activityRadioGroup"
         android:layout_width="0dp"
-        android:layout_height="330dp"
+        android:layout_height="380dp"
         android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintBottom_toTopOf="@id/StartStopButton"
@@ -21,38 +21,44 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <RadioButton
+            android:id="@+id/OtherButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Other" />
+
+        <RadioButton
             android:id="@+id/WalkingButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Walking" />
 
         <RadioButton
             android:id="@+id/RunningButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Running" />
 
         <RadioButton
             android:id="@+id/StandingButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Standing" />
 
         <RadioButton
             android:id="@+id/SittingButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sitting" />
 
         <RadioButton
             android:id="@+id/UpstairsButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Upstairs" />
 
         <RadioButton
             android:id="@+id/DownstairsButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Downstairs" />
     </RadioGroup>
@@ -69,7 +75,7 @@
         android:layout_marginTop="8dp" />
 
     <!-- Pause/Resume Button -->
-    <Button
+    <!--<Button
         android:id="@+id/PauseResumeButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -77,7 +83,7 @@
         app:layout_constraintTop_toBottomOf="@id/StartStopButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp" /> -->
 
     <!-- Discard Button -->
     <Button
@@ -85,7 +91,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Discard"
-        app:layout_constraintTop_toBottomOf="@id/PauseResumeButton"
+        app:layout_constraintTop_toBottomOf="@id/StartStopButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
@@ -95,10 +101,10 @@
         android:id="@+id/textViewValues"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:padding="16dp"
         android:text="Sensor Values"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@id/DiscardButton"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        android:padding="16dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
