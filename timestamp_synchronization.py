@@ -1,3 +1,4 @@
+# linear/gyro/gravity의 timestamp를 동기화시킨다. (0.0*초)
 import csv
 
 # main_file 기준으로 target_file을 정리한다.
@@ -17,9 +18,9 @@ def adjustFile(input_folder, output_folder):
     gravity_revised = open(f"{output_folder}/gravity_revised.csv", 'a', newline='')
 
     # CSV readers
-    linear_reader = csv.reader(linear)
-    gyro_reader = csv.reader(gyro)
-    gravity_reader = csv.reader(gravity)
+    linear_reader = ([value.strip() for value in line if value.strip() != ''] for line in csv.reader(linear))
+    gyro_reader = ([value.strip() for value in line if value.strip() != ''] for line in csv.reader(gyro))
+    gravity_reader = ([value.strip() for value in line if value.strip() != ''] for line in csv.reader(gravity))
 
     # CSV writers
     linear_writer = csv.writer(linear_revised)
@@ -35,13 +36,15 @@ def adjustFile(input_folder, output_folder):
     writers = [linear_writer, gyro_writer, gravity_writer]
     lines = [linear_line, gyro_line, gravity_line]
 
+    # count = 0
     while all(lines):
-        # Skip invalid or blank lines
         for i in range(3):
-            while lines[i] is not None and (not isValidLine(lines[i]) or len(lines[i]) == 0):
-                lines[i] = next(readers[i], None)
-            if lines[i] is None:  # Stop if end of file is reached
-                break
+            while lines[i] is not None:  # 파일 끝이 아니면 반복
+                # count = count + 1
+                print(f"Line: {lines[i]}, Length: {len(lines[i])}")
+                if isValidLine(lines[i]):  # 유효한 데이터면 루프 탈출
+                    break
+                lines[i] = next(readers[i], None)  # 다음 줄로 이동
 
         # Check if all lines are valid
         if not all(lines):
@@ -61,14 +64,15 @@ def adjustFile(input_folder, output_folder):
 
 # data가 유효한지 검사
 def isValidLine(line):
-    if not line or len(line) != 5:  # 최소 5개의 열이 있어야 유효
+    if not line or len(line) != 5:  # 정확히 5개의 열만 유효
         return False
-    # 숫자인지 확인 (소수점, 지수 표기법 등 포함)
     try:
-        float(line[1])  # 두 번째 열(timestamp)이 숫자인지 확인
-        return True
+        value = float(line[1])
+        if value.is_integer() and len(str(int(value))) >= 6:  # 정수이고 6자리 이상인지 확인
+            return True
     except ValueError:
         return False
+    return False
 
 # 세 timeStamp가 같은지 확인 함수
 def isSameTimestamp(linear_timestamp, gyro_timestamp, gravity_timestamp):
@@ -91,7 +95,8 @@ def findMinTimestamp(linear_timestamp, gyro_timestamp, gravity_timestamp):
     return timestamps.index(min(timestamps))
 
 # 실행 (나중에 파일 경로 작성, 상대경로로 작성)
-for i in range(1, 7):
+# 파일은 기존에 timestamp 기준으로 오름차순으로 작성되어야 결과가 제대로 산출됨
+for i in range(1, 3):
     input_folder = f"./testing/{i}"
     output_folder = f"./testing/{i}"
     adjustFile(input_folder, output_folder)
