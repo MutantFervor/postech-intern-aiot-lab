@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import entropy
+import math
 
 # 기존 file을 timestamp 기준으로 하나로 합병
-def loadFile(fileNum):
-    linear_file = f"./testing/{fileNum}/result/linear.csv"
-    gyro_file = f"./testing/{fileNum}/result/gyro.csv"
-    gravity_file = f"./testing/{fileNum}/result/gravity.csv"
+def load_file(file_num):
+    linear_file = f"./testing/{file_num}/result/linear.csv"
+    gyro_file = f"./testing/{file_num}/result/gyro.csv"
+    gravity_file = f"./testing/{file_num}/result/gravity.csv"
 
     # 1. 개별 파일 로드
     accel = pd.read_csv(linear_file)
@@ -37,18 +38,18 @@ def loadFile(fileNum):
     merged_data = merged_data.drop(columns=['timestamp_compare'])
 
     # 3. 병합 결과 확인
-    print(f"병합된 데이터 크기: {merged_data.shape}")
+    # print(f"병합된 데이터 크기: {merged_data.shape}")
     print(merged_data.head())
 
     # 4. 새로운 CSV 파일로 저장
-    merged_data.to_csv(f"./testing/{fileNum}/result/merged_data.csv", header=False, index=False)
-    print("병합된 데이터를 'merged_data.csv'로 저장했습니다.")
+    merged_data.to_csv(f"./testing/{file_num}/result/merged_data.csv", header=False, index=False)
+    # print("병합된 데이터를 'merged_data.csv'로 저장했습니다.")
 
 
 # timestamp 기준으로 1초로 window 자르기 (0.5s씩 겹쳐서)
-def cutToWindow(fileNum, window_size=1.0, overlap=0.5):
-    data_file = f"./testing/{fileNum}/result/merged_data.csv"
-    save_path = f"./testing/{fileNum}/result/feature.csv"
+def cut_to_window(file_num, window_size=1.0, overlap=0.5):
+    data_file = f"./testing/{file_num}/result/merged_data.csv"
+    save_path = f"./testing/{file_num}/result/feature.csv"
     data = pd.read_csv(data_file)
 
     # data_file에 index 부여
@@ -77,7 +78,7 @@ def cutToWindow(fileNum, window_size=1.0, overlap=0.5):
             window_z = cutData(data, sensor, 'z', startTimestamp, stopTimestamp)
 
             # 독립적인 축 데이터를 calculateFeatures에 전달
-            features.extend(calculateFeatures(window_x, window_y, window_z))
+            features.extend(calculate_features(window_x, window_y, window_z))
 
         # 레이블 추가 (activity_class)
         label = \
@@ -91,32 +92,116 @@ def cutToWindow(fileNum, window_size=1.0, overlap=0.5):
         # 타임스탬프 업데이트
         startTimestamp += window_step
 
-    print(f"Feature extraction complete. Saved to {save_path}.")
+    # print(f"Feature extraction complete. Saved to {save_path}.")
     return
 
+""""""
+
+# DC 계산 함수
+def calculate_dc(data):
+    N = len(data)
+    return sum(data) / N
+
+# 엔트로피 계산 함수
+def calculate_entropy(data):
+    total = sum(data)
+    if total == 0:
+        return 0  # 데이터 총합이 0일 경우 엔트로피는 0
+    probabilities = [x / total for x in data]  # 확률 분포 계산
+    entropy_value = 0
+    for p in probabilities:
+        # if p > 0:  # log(0) 방지
+        entropy_value -= p * (math.log(p, 10))  # base=10 사용
+    return entropy_value
+
+# 에너지 계산 함수
+def calculate_total_energy(data):
+    N = len(data)
+    squared_sum = sum(x**2 for x in data)
+    return squared_sum / N
+
+# 상관계수 계산 함수
+def calculate_correlation(x, y):
+    if len(x) != len(y):
+        raise ValueError("x와 y의 길이가 같아야 합니다.")
+    N = len(x)
+    mean_x = sum(x) / N
+    mean_y = sum(y) / N
+
+    numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(N))
+    denominator_x = sum((x[i] - mean_x)**2 for i in range(N))
+    denominator_y = sum((y[i] - mean_y)**2 for i in range(N))
+    denominator = (denominator_x * denominator_y)**0.5
+
+    if denominator == 0:  # 분모가 0인 경우 상관계수 계산 불가능
+        return 0
+
+    return numerator / denominator
 
 # feature 계산 함수
-def calculateFeatures(window_x, window_y, window_z):
+def calculate_features(window_x, window_y, window_z):
+    # 1. DC (평균값)
+    dc_x = calculate_dc(window_x)
+    dc_y = calculate_dc(window_y)
+    dc_z = calculate_dc(window_z)
+
+    # 2. Information Entropy
+    h_x = calculate_entropy(window_x)
+    h_y = calculate_entropy(window_y)
+    h_z = calculate_entropy(window_z)
+
+    # 3. Total Energy of Frequency Spectrum
+    e_x = calculate_total_energy(window_x)
+    e_y = calculate_total_energy(window_y)
+    e_z = calculate_total_energy(window_z)
+
+    # 4. Correlation
+    r_xy = calculate_correlation(window_x, window_y)
+    r_yz = calculate_correlation(window_y, window_z)
+    r_xz = calculate_correlation(window_x, window_z)
+
+    # 12개 feature 반환
+    return [dc_x, dc_y, dc_z, h_x, h_y, h_z, e_x, e_y, e_z, r_xy, r_yz, r_xz]
+
+# feature 계산 함수
+"""def calculate_features(window_x, window_y, window_z):
     # 1. DC (평균값)
     dc_x, dc_y, dc_z = np.mean(window_x), np.mean(window_y), np.mean(window_z)
 
     # 2. Information Entropy
-    h_x = entropy(np.array(window_x) / sum(window_x), base=2)
-    h_y = entropy(np.array(window_y) / sum(window_y), base=2)
-    h_z = entropy(np.array(window_z) / sum(window_z), base=2)
+    probabilities = np.array(window_x) / np.sum(window_x)
+    h_x = entropy(probabilities, base=10)
+    print(h_x)
+    probabilities = np.array(window_y) / np.sum(window_y)
+    h_y = entropy(probabilities, base=10)
+    print(h_y)
+    probabilities = np.array(window_z) / np.sum(window_z)
+    h_z = entropy(probabilities, base=10)
+    print(h_z)
 
     # 3. Total Energy of Frequency Spectrum
-    e_x = np.sum(np.abs(np.fft.fft(window_x)) ** 2) / len(window_x)
-    e_y = np.sum(np.abs(np.fft.fft(window_y)) ** 2) / len(window_y)
-    e_z = np.sum(np.abs(np.fft.fft(window_z)) ** 2) / len(window_z)
+    def calculate_energy(window):
+        fft_result = np.fft.fft(window)
+        return np.sum(np.abs(fft_result) ** 2) / len(window)
+
+    e_x = calculate_energy(window_x)
+    e_y = calculate_energy(window_y)
+    e_z = calculate_energy(window_z)
 
     # 4. Correlation
-    r_xy = np.corrcoef(window_x, window_y)[0, 1]
-    r_yz = np.corrcoef(window_y, window_z)[0, 1]
-    r_xz = np.corrcoef(window_x, window_z)[0, 1]
+    def safe_correlation(w1, w2):
+        if len(w1) != len(w2):
+            raise ValueError("윈도우 길이가 일치하지 않습니다.")
+        if np.all(w1 == w1[0]) or np.all(w2 == w2[0]):  # 상수 데이터 처리
+            return 0
+        return np.corrcoef(w1, w2)[0, 1]
 
-    # 12개
-    return [dc_x, dc_y, dc_z, h_x, h_y, h_z, e_x, e_y, e_z, r_xy, r_yz, r_xz]
+    r_xy = safe_correlation(window_x, window_y)
+    r_yz = safe_correlation(window_y, window_z)
+    r_xz = safe_correlation(window_x, window_z)
+
+    # 12개 feature 반환
+    return [dc_x, dc_y, dc_z, h_x, h_y, h_z, e_x, e_y, e_z, r_xy, r_yz, r_xz] """
 
 
 # timestamp에 따라 data cutting
@@ -133,11 +218,10 @@ def cutData(data, sensor, axis, startTimestamp, stopTimestamp):
 # feature vector를 정규화한다
 # def nomarlization():
 
-
 # 데이터를 libSVM에 넣고 작동시킨다.
 # def svmClassifier():
 
 # 실행 (temp)
-for i in range(1, 2):
-    loadFile(i)
-    cutToWindow(i)
+for i in range(4, 5):
+    load_file(i)
+    cut_to_window(i)
