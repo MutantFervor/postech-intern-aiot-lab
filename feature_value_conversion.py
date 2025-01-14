@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import entropy
 
 # 기존 file을 timestamp 기준으로 하나로 합병
 def load_file(file_num):
@@ -218,8 +217,9 @@ def prepare_libsvm_file(file_num):
     return
 
 # 실행 (temp)
-# for i in range(1, 2):
-    #load_file(i)
-    #cut_to_window(i)
-    #normalization(i)
-# prepare_libsvm_file(1)
+# for i in range(1, 7):
+    # input_folder = f"./testing/{i}"
+    # output_folder = f"./testing/{i}"
+    # result_folder = f"./testing/{i}/result"
+    # os.makedirs(result_folder, exist_ok=True)
+    # adjust_and_sync_files(input_folder, output_folder, result_folder)
