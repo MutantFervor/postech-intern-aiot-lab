@@ -55,10 +55,10 @@ def adjust_and_sync_files(input_folder, output_folder, result_folder, interval=1
                 tempNum = findMinTimestamp(lines[0][1], lines[1][1], lines[2][1])
                 lines[tempNum] = next(readers[tempNum], None)
 
-    # 타임스탬프 조정
-    adjust_timestamps(linear_revised, f"{result_folder}/linear.csv", interval)
-    adjust_timestamps(gyro_revised, f"{result_folder}/gyro.csv", interval)
-    adjust_timestamps(gravity_revised, f"{result_folder}/gravity.csv", interval)
+    # 타임스탬프 조정 (result 파일이 없으면 생성하는 로직 필요)
+    adjust_timestamps(linear_revised, f"{result_folder}/result/linear.csv", interval)
+    adjust_timestamps(gyro_revised, f"{result_folder}/result/gyro.csv", interval)
+    adjust_timestamps(gravity_revised, f"{result_folder}/result/gravity.csv", interval)
 
 
 # 데이터 유효성 검사
@@ -110,9 +110,9 @@ def adjust_timestamps(input_file, output_file, interval):
 
 
 # 실행
-for i in range(1, 7):
-    input_folder = f"./testing/{i}"
-    output_folder = f"./testing/{i}"
-    result_folder = f"./testing/{i}/result"
-    os.makedirs(result_folder, exist_ok=True)
-    adjust_and_sync_files(input_folder, output_folder, result_folder)
+# for i in range(1, 7):
+    # input_folder = f"./testing/{i}"
+    # output_folder = f"./testing/{i}"
+    # result_folder = f"./testing/{i}/result"
+    # os.makedirs(result_folder, exist_ok=True)
+    # adjust_and_sync_files(input_folder, output_folder, result_folder)

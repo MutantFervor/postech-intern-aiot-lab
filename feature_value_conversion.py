@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 
 # 기존 file을 timestamp 기준으로 하나로 합병
-def load_file(file_num):
-    linear_file = f"./testing/{file_num}/result/linear.csv"
-    gyro_file = f"./testing/{file_num}/result/gyro.csv"
-    gravity_file = f"./testing/{file_num}/result/gravity.csv"
+def load_file(input_folder, output_folder):
+    linear_file = f"{input_folder}/result/linear.csv"
+    gyro_file = f"{input_folder}/result/gyro.csv"
+    gravity_file = f"{input_folder}/result/gravity.csv"
 
     # 1. 개별 파일 로드
     accel = pd.read_csv(linear_file, header=None)
@@ -40,58 +40,16 @@ def load_file(file_num):
     print(merged_data.head())
 
     # 4. 새로운 CSV 파일로 저장
-    merged_data.to_csv(f"./testing/{file_num}/result/merged_data.csv", header=False, index=False)
+    merged_data.to_csv(f"{output_folder}/result/merged_data.csv", header=False, index=False)
     print("병합된 데이터를 'merged_data.csv'로 저장했습니다.")
     return
 
 
-# feaute data를 nomalization : Min-Max Normalization
-def normalization(file_num):
-    # 파일 경로 설정
-    data_file = f"./testing/{file_num}/result/feature.csv"
-    save_path = f"./testing/{file_num}/result/normalized_data.csv"
-    params_path = f"./testing/{file_num}/result/normalization_params.csv"
-
-    # 데이터 로드
-    data = pd.read_csv(data_file, header=None)  # 헤더 없이 데이터 로드
-    columns_to_normalize = list(range(data.shape[1]))
-
-    # 정규화 파라미터 저장용 리스트
-    normalization_params = []
-
-    # 정규화 수행
-    for column in columns_to_normalize:
-        min_val = data[column].min()
-        max_val = data[column].max()
-
-        # a_i와 b_i 계산
-        a_i = 1 / (max_val - min_val) if max_val != min_val else 1
-        b_i = -min_val / (max_val - min_val) if max_val != min_val else 0
-
-        # 데이터 normalization
-        data[column] = a_i * data[column] + b_i
-
-        # 파라미터 저장
-        normalization_params.append({
-            "column_index": column,
-            "a_i": a_i,
-            "b_i": b_i
-        })
-
-    # 정규화된 데이터 저장
-    data.to_csv(save_path, index=False, header=False)
-    print(f"정규화된 데이터를 '{save_path}'로 저장했습니다.")
-
-    # 파라미터 저장 (CSV 파일)
-    pd.DataFrame(normalization_params).to_csv(params_path, index=False)
-    print(f"정규화 파라미터를 '{params_path}'로 저장했습니다.")
-
-
 # timestamp 기준으로 1초로 window 자르기 (0.5s씩 겹쳐서)
-def cut_to_window(file_num, window_size=1.0, overlap=0.5):
+def cut_to_window(input_folder, window_size=1.0, overlap=0.5):
     # 파일 경로 설정
-    data_file = f"./testing/{file_num}/result/merged_data.csv"
-    save_path = f"./testing/{file_num}/result/feature.csv"
+    data_file = f"{input_folder}/result/merged_data.csv"
+    save_path = f"{input_folder}/result/feature.csv"
 
     # 데이터 로드
     data = pd.read_csv(data_file, header=None)
@@ -192,6 +150,48 @@ def calculate_features(window_x, window_y, window_z):
     return [dc_x, h_x, e_x, r_xy, r_xz,  # x축
             dc_y, h_y, e_y, r_yz,        # y축
             dc_z, h_z, e_z]              # z축
+
+
+# feaute data를 nomalization : Min-Max Normalization
+def normalization(input_folder):
+    # 파일 경로 설정
+    data_file = f"{input_folder}/result/feature.csv"
+    save_path = f"{input_folder}/result/normalized_data.csv"
+    params_path = f"{input_folder}/result/normalization_params.csv"
+
+    # 데이터 로드
+    data = pd.read_csv(data_file, header=None)  # 헤더 없이 데이터 로드
+    columns_to_normalize = list(range(data.shape[1]))
+
+    # 정규화 파라미터 저장용 리스트
+    normalization_params = []
+
+    # 정규화 수행
+    for column in columns_to_normalize:
+        min_val = data[column].min()
+        max_val = data[column].max()
+
+        # a_i와 b_i 계산
+        a_i = 1 / (max_val - min_val) if max_val != min_val else 1
+        b_i = -min_val / (max_val - min_val) if max_val != min_val else 0
+
+        # 데이터 normalization
+        data[column] = a_i * data[column] + b_i
+
+        # 파라미터 저장
+        normalization_params.append({
+            "column_index": column,
+            "a_i": a_i,
+            "b_i": b_i
+        })
+
+    # 정규화된 데이터 저장
+    data.to_csv(save_path, index=False, header=False)
+    print(f"정규화된 데이터를 '{save_path}'로 저장했습니다.")
+
+    # 파라미터 저장 (CSV 파일)
+    pd.DataFrame(normalization_params).to_csv(params_path, index=False)
+    print(f"정규화 파라미터를 '{params_path}'로 저장했습니다.")
 
 
 # normailzation 값을 libsvm이 읽을 수 있는 형식으로 바꿈 (사용 안할 것 같은데)
