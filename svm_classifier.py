@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib  # 모델 저장 및 로드
 
-def train_svm_from_files(file_paths, test_size=0.997, kernel='rbf', C=1, gamma='scale'):
+def train_svm_from_files(file_paths, test_size=0.2, kernel='rbf', C=1, gamma='scale'):
     """
     여러 파일에서 데이터를 병합한 후 SVM 모델을 학습하고 평가합니다.
 
@@ -86,7 +86,7 @@ def train_svm_from_files(file_paths, test_size=0.997, kernel='rbf', C=1, gamma='
     return accuracy
 
 
-def train_and_save_svm(file_paths, model_save_path, test_size=0.3, kernel='rbf', C=1, gamma='scale'):
+def train_and_save_svm(file_paths, model_save_path, test_size=0.001, kernel='rbf', C=1, gamma='scale'):
     """
     여러 파일에서 데이터를 병합한 후 SVM 모델을 학습하고, 모델을 저장합니다.
 

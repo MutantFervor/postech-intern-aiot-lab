@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 
@@ -216,10 +218,14 @@ def prepare_libsvm_file(file_num):
     print("Saved to dataset.svm.")
     return
 
-# 실행 (temp)
-# for i in range(1, 7):
-    # input_folder = f"./testing/{i}"
-    # output_folder = f"./testing/{i}"
-    # result_folder = f"./testing/{i}/result"
-    # os.makedirs(result_folder, exist_ok=True)
-    # adjust_and_sync_files(input_folder, output_folder, result_folder)
+def execute():
+    for i in range(1, 7):
+        input_folder = f"./testing/{i}"
+        output_folder = f"./testing/{i}"
+        result_folder = f"./testing/{i}/result"
+        os.makedirs(result_folder, exist_ok=True)
+        load_file(input_folder, output_folder)
+        cut_to_window(input_folder)
+        normalization(input_folder)
+
+# execute()

@@ -67,25 +67,28 @@ def isValidLine(line):
         return False
     try:
         value = float(line[1])
-        if value.is_integer() and len(str(int(value))) >= 6:
+        if value.is_integer() and len(str(int(value))) >= 6: # 6자리 미만일 경우 비교가 불가
             return True
     except ValueError:
         return False
     return False
 
 
-# 동일 타임스탬프 확인 (수정 필요)
+# 동일 타임스탬프 확인 (수정 중)
 def isSameTimestamp(linear_timestamp, gyro_timestamp, gravity_timestamp):
     timestamps = [linear_timestamp, gyro_timestamp, gravity_timestamp]
-    comparison_keys = [str(int(ts))[:6] if len(str(int(ts))) == 10 else str(int(ts))[:7] for ts in timestamps]
+    comparison_keys = [
+        str(int(ts))[:len(str(int(ts))) - 4] for ts in timestamps
+    ]
     return all(key == comparison_keys[0] for key in comparison_keys)
 
 
-# 최소 타임스탬프 찾기 (수정 필요)
+# 최소 타임스탬프 찾기 (수정 중)
 def findMinTimestamp(linear_timestamp, gyro_timestamp, gravity_timestamp):
     timestamps = [linear_timestamp, gyro_timestamp, gravity_timestamp]
-    comparison_values = [int(str(int(ts))[:6]) if len(str(int(ts))) == 10 else int(str(int(ts))[:7]) for ts in
-                         timestamps]
+    comparison_values = [
+        int(str(int(ts))[:len(str(int(ts))) - 4]) for ts in timestamps
+    ]
     return comparison_values.index(min(comparison_values))
 
 
@@ -108,11 +111,12 @@ def adjust_timestamps(input_file, output_file, interval):
 # 이상치 처리 interpolation 함수 필요
 # def interpolation():
 
+def execute():
+    for i in range(1, 7):
+        input_folder = f"./testing/{i}"
+        output_folder = f"./testing/{i}"
+        result_folder = f"./testing/{i}"
+        os.makedirs(result_folder, exist_ok=True)
+        adjust_and_sync_files(input_folder, output_folder, result_folder)
 
-# 실행
-# for i in range(1, 7):
-    # input_folder = f"./testing/{i}"
-    # output_folder = f"./testing/{i}"
-    # result_folder = f"./testing/{i}/result"
-    # os.makedirs(result_folder, exist_ok=True)
-    # adjust_and_sync_files(input_folder, output_folder, result_folder)
+# execute()
