@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib  # 모델 저장 및 로드
 
-def train_svm_from_files(file_paths, test_size=0.2, kernel='rbf', C=1, gamma='scale'):
+def train_svm_from_files(file_paths, test_size=0.99, kernel='rbf', C=1, gamma='scale'):
     """
     여러 파일에서 데이터를 병합한 후 SVM 모델을 학습하고 평가합니다.
 
@@ -65,23 +65,12 @@ def train_svm_from_files(file_paths, test_size=0.2, kernel='rbf', C=1, gamma='sc
     cm = confusion_matrix(y_test, y_pred, labels=[1, 2, 3, 4, 5, 6])
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    # print("\nConfusion Matrix (Counts):")
-    # print(cm)
-
-    # print("\nConfusion Matrix (Probabilities):")
-    # print(cm_normalized)
-
     # Confusion Matrix 시각화 (확률)
     sns.heatmap(cm_normalized, annot=True, fmt='.2f', cmap='Blues', xticklabels=[1, 2, 3, 4, 5, 6], yticklabels=[1, 2, 3, 4, 5, 6])
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix (Probabilities)')
     plt.show()
-
-    # Classification Report 출력
-    report = classification_report(y_test, y_pred, labels=[1, 2, 3, 4, 5, 6])
-    # print("\nClassification Report:")
-    # print(report)
 
     return accuracy
 
@@ -137,11 +126,6 @@ def train_and_save_svm(file_paths, model_save_path, test_size=0.001, kernel='rbf
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
     plt.show()
-
-    # Classification Report 출력
-    report = classification_report(y_test, y_pred, labels=[1, 2, 3, 4, 5, 6])
-    print("\nClassification Report:")
-    print(report)
 
     return accuracy
 

@@ -38,20 +38,12 @@ def evaluate_saved_model(model_path, test_file_path, labels):
 
     # Confusion Matrix
     cm = confusion_matrix(y_test, y_pred, labels=labels)
-    print("\nConfusion Matrix:")
-    print(cm)
-
-    # Confusion Matrix 시각화
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
     plt.show()
 
-    # Classification Report
-    report = classification_report(y_test, y_pred, labels=labels)
-    print("\nClassification Report:")
-    print(report)
 
 # 경로 설정
 model_path = "./svm_trained_model.joblib"  # 저장된 모델 파일 경로

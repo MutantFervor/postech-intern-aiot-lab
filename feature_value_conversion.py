@@ -122,8 +122,9 @@ def calculate_features(window_x, window_y, window_z):
     def calculate_entropy(window):
         fft_result = np.fft.fft(window)
         magnitude = np.abs(fft_result)  # 복소수의 크기 |X[k]|
-        # magnitude[0] = 0
+        magnitude[0] = 0
         prob_distribution = magnitude ** 2 / np.sum(magnitude ** 2)  # 에너지 기반 확률 분포
+        prob_distribution = np.where(prob_distribution == 0, 1e-10, prob_distribution)
         entropy_num = -np.sum(prob_distribution * np.log10(prob_distribution))
         return entropy_num
 
@@ -135,7 +136,7 @@ def calculate_features(window_x, window_y, window_z):
     def calculate_energy(window):
         fft_result = np.fft.fft(window)
         magnitude = np.abs(fft_result)  # 복소수의 크기 |X[k]|
-        # magnitude[0] = 0
+        magnitude[0] = 0
         energy_num = np.sum(magnitude ** 2) / len(window)
         return energy_num
 
@@ -148,10 +149,60 @@ def calculate_features(window_x, window_y, window_z):
     r_yz = np.corrcoef(window_y, window_z)[0, 1]
     r_xz = np.corrcoef(window_x, window_z)[0, 1]
 
-    # 12개
-    return [dc_x, h_x, e_x, r_xy, r_xz,  # x축
-            dc_y, h_y, e_y, r_yz,        # y축
-            dc_z, h_z, e_z]              # z축
+    # +1. SMA
+    def calculate_sma(window_x, window_y, window_z):
+        return np.sum(np.abs(window_x) + np.abs(window_y) + np.abs(window_z)) / len(window_x)
+
+    sma = calculate_sma(window_x, window_y, window_z)
+
+    # +2. Standard Deviation (표준 편차)
+    std_x = np.std(window_x)
+    std_y = np.std(window_y)
+    std_z = np.std(window_z)
+
+    # +3.
+    def calculate_skewness(window):
+        mean = np.mean(window)
+        std = np.std(window)
+        skewness = np.mean(((window - mean) / std) ** 3)
+        return skewness
+
+    # Example
+    skew_x = calculate_skewness(window_x)
+    skew_y = calculate_skewness(window_y)
+    skew_z = calculate_skewness(window_z)
+
+    # +4.
+    # Median Absolute Deviation
+    def calculate_mad(window):
+        return np.median(np.abs(window - np.median(window)))
+
+    mad_x = calculate_mad(window_x)
+    mad_y = calculate_mad(window_y)
+    mad_z = calculate_mad(window_z)
+
+    # Kurtosis
+    def calculate_kurtosis(window):
+        mean = np.mean(window)
+        std = np.std(window)
+        return np.mean(((window - mean) / std) ** 4) / (np.mean(((window - mean) / std) ** 2) ** 2)
+
+    kurtosis_x = calculate_kurtosis(window_x)
+    kurtosis_y = calculate_kurtosis(window_y)
+    kurtosis_z = calculate_kurtosis(window_z)
+
+    # Interquartile Range
+    def calculate_iqr(window):
+        return np.percentile(window, 75) - np.percentile(window, 25)
+
+    iqr_x = calculate_iqr(window_x)
+    iqr_y = calculate_iqr(window_y)
+    iqr_z = calculate_iqr(window_z)
+
+
+    return [dc_x, h_x, e_x, r_xy, r_xz, std_x, skew_x, mad_x, kurtosis_x, iqr_x, sma,  # x축
+            dc_y, h_y, e_y, r_yz, std_y, skew_y, mad_y, kurtosis_y, iqr_y,     # y축
+            dc_z, h_z, e_z, std_z, skew_z, mad_z, kurtosis_z, iqr_z]              # z축
 
 
 # feaute data를 nomalization : Min-Max Normalization
@@ -195,28 +246,6 @@ def normalization(input_folder):
     pd.DataFrame(normalization_params).to_csv(params_path, index=False)
     print(f"정규화 파라미터를 '{params_path}'로 저장했습니다.")
 
-
-# normailzation 값을 libsvm이 읽을 수 있는 형식으로 바꿈 (사용 안할 것 같은데)
-def prepare_libsvm_file(file_num):
-    # CSV 파일 로드
-    input_csv = f"./testing/{file_num}/result/normalized_data.csv"
-    output_svm = f"./testing/{file_num}/result/dataset.svm"
-    data = pd.read_csv(input_csv, header=None)
-
-    # 마지막 열을 라벨로 추출
-    labels = data.iloc[:, -1]
-
-    # 나머지 열을 특징으로 추출
-    features = data.iloc[:, :-1]
-
-    # libSVM 형식으로 변환
-    with open(output_svm, 'w') as f:
-        for i in range(len(labels)):
-            line = f"{int(labels[i])} " + " ".join([f"{j + 1}:{features.iloc[i, j]}" for j in range(features.shape[1])])
-            f.write(line + "\n")
-
-    print("Saved to dataset.svm.")
-    return
 
 def execute():
     for i in range(1, 7):
