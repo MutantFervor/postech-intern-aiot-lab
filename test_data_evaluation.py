@@ -9,17 +9,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def evaluate_saved_model(model_path, test_file_path, labels):
-    """
-    저장된 SVM 모델로 새로운 데이터를 검증합니다.
-
-    Args:
-    - model_path (str): 저장된 모델 파일 경로
-    - test_file_path (str): 검증 데이터 파일 경로
-    - labels (list): Confusion Matrix에서 사용할 클래스 라벨 리스트
-
-    Returns:
-    - None
-    """
     # 모델 로드
     model = joblib.load(model_path)
     print(f"[INFO] 모델 '{model_path}' 로드 완료.")

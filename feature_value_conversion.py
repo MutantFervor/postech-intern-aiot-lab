@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 import numpy as np
 
@@ -96,9 +95,17 @@ def cut_to_window(input_folder, window_size=1.0, overlap=0.5):
         start_timestamp += window_step
 
     # 결과를 CSV로 저장
-    feature_df = pd.DataFrame(feature_list)
-    feature_df.to_csv(save_path, index=False, header=False)
-    print(f"Feature extraction complete. Saved to {save_path}.")
+    base_headers = ['dc_x', 'h_x', 'e_x', 'r_xy', 'r_xz', 'std_x', 'skew_x', 'mad_x', 'kurtosis_x', 'iqr_x', 'sma',
+                    'dc_y', 'h_y', 'e_y', 'r_yz', 'std_y', 'skew_y', 'mad_y', 'kurtosis_y', 'iqr_y',
+                    'dc_z', 'h_z', 'e_z', 'std_z', 'skew_z', 'mad_z', 'kurtosis_z', 'iqr_z']
+
+    # 접두사가 붙은 헤더 생성
+    headers = [f"{sensor}_{feature}" for sensor in ['linear', 'gyro', 'gravity'] for feature in base_headers
+              ] + ['activity_class']  # 레이블 추가
+
+    feature_df = pd.DataFrame(feature_list, columns=headers)
+    feature_df.to_csv(save_path, index=False)
+    print(f"Feature extraction complete. Saved to {save_path}.\n")
     return
 
 
@@ -115,10 +122,10 @@ def cut_data(data, sensor, axis, startTimestamp, stopTimestamp):
 
 # feature 계산 함수
 def calculate_features(window_x, window_y, window_z):
-    # 1. DC (평균값)
+    # 1. DC
     dc_x, dc_y, dc_z = np.mean(window_x), np.mean(window_y), np.mean(window_z)
 
-    # 2. Information Entropy
+    # 2. Frequency-domain entropy
     def calculate_entropy(window):
         fft_result = np.fft.fft(window)
         magnitude = np.abs(fft_result)  # 복소수의 크기 |X[k]|
@@ -160,7 +167,7 @@ def calculate_features(window_x, window_y, window_z):
     std_y = np.std(window_y)
     std_z = np.std(window_z)
 
-    # +3.
+    # +3. skewness
     def calculate_skewness(window):
         mean = np.mean(window)
         std = np.std(window)
@@ -172,8 +179,7 @@ def calculate_features(window_x, window_y, window_z):
     skew_y = calculate_skewness(window_y)
     skew_z = calculate_skewness(window_z)
 
-    # +4.
-    # Median Absolute Deviation
+    # +4. Median Absolute Deviation
     def calculate_mad(window):
         return np.median(np.abs(window - np.median(window)))
 
@@ -181,7 +187,7 @@ def calculate_features(window_x, window_y, window_z):
     mad_y = calculate_mad(window_y)
     mad_z = calculate_mad(window_z)
 
-    # Kurtosis
+    # +5. Kurtosis
     def calculate_kurtosis(window):
         mean = np.mean(window)
         std = np.std(window)
@@ -191,7 +197,7 @@ def calculate_features(window_x, window_y, window_z):
     kurtosis_y = calculate_kurtosis(window_y)
     kurtosis_z = calculate_kurtosis(window_z)
 
-    # Interquartile Range
+    # +6. Interquartile Range
     def calculate_iqr(window):
         return np.percentile(window, 75) - np.percentile(window, 25)
 
@@ -199,22 +205,36 @@ def calculate_features(window_x, window_y, window_z):
     iqr_y = calculate_iqr(window_y)
     iqr_z = calculate_iqr(window_z)
 
+    return [dc_x, h_x, e_x, r_xy, r_xz, std_x, skew_x, mad_x, kurtosis_x, iqr_x, sma,
+            dc_y, h_y, e_y, r_yz, std_y, skew_y, mad_y, kurtosis_y, iqr_y,
+            dc_z, h_z, e_z, std_z, skew_z, mad_z, kurtosis_z, iqr_z]
 
-    return [dc_x, h_x, e_x, r_xy, r_xz, std_x, skew_x, mad_x, kurtosis_x, iqr_x, sma,  # x축
-            dc_y, h_y, e_y, r_yz, std_y, skew_y, mad_y, kurtosis_y, iqr_y,     # y축
-            dc_z, h_z, e_z, std_z, skew_z, mad_z, kurtosis_z, iqr_z]              # z축
 
+def combine_file(input_folder):
+    files = [f"{input_folder}/1/result/feature.csv",
+             f"{input_folder}/2/result/feature.csv",
+             f"{input_folder}/3/result/feature.csv",
+             f"{input_folder}/4/result/feature.csv",
+             f"{input_folder}/5/result/feature.csv",
+             f"{input_folder}/6/result/feature.csv"]
+
+    combined_data = pd.concat([pd.read_csv(file) for file in files], ignore_index=True)
+    combined_data.to_csv(f"{input_folder}/combined_file.csv", index=False, header=False)
+    print("combined_file made.")
+    return
 
 # feaute data를 nomalization : Min-Max Normalization
 def normalization(input_folder):
     # 파일 경로 설정
-    data_file = f"{input_folder}/result/feature.csv"
-    save_path = f"{input_folder}/result/normalized_data.csv"
-    params_path = f"{input_folder}/result/normalization_params.csv"
+    combine_file(input_folder)
+    data_file = f"{input_folder}/combined_file.csv"
+    save_path = f"{input_folder}/normalized_data.csv"
+    params_path = f"{input_folder}/normalization_params.csv"
 
     # 데이터 로드
     data = pd.read_csv(data_file, header=None)  # 헤더 없이 데이터 로드
     columns_to_normalize = list(range(data.shape[1]))
+    columns_to_normalize = columns_to_normalize[:-1]  # 마지막 열 제외
 
     # 정규화 파라미터 저장용 리스트
     normalization_params = []
@@ -255,6 +275,6 @@ def execute():
         os.makedirs(result_folder, exist_ok=True)
         load_file(input_folder, output_folder)
         cut_to_window(input_folder)
-        normalization(input_folder)
+    normalization(f"./testing")
 
 # execute()

@@ -14,26 +14,23 @@ def normalization_to_test_data(input_folder):
     save_path = f"{input_folder}/result/normalized_data.csv"
 
     # 데이터 로드
-    data = pd.read_csv(data_file, header=None)  # 헤더 없이 데이터 로드
-    columns_to_normalize = list(range(data.shape[1]))
+    data = pd.read_csv(data_file, header=None, skiprows=1)
+    columns_to_normalize = list(range(data.shape[1] - 1))
 
-    # params를 가져온다.
-    value = find_activity_class(data)
-    params = pd.read_csv(f"./testing/{value}/result/normalization_params.csv")
-    
+    # params load
+    params = pd.read_csv("./testing/normalization_params.csv")
+
+    # normalization
     a_num = b_num = 0
-
-    # 정규화 수행
     for column in columns_to_normalize:
         a_i = params.iloc[a_num, 1]
         b_i = params.iloc[b_num, 2]
 
         # 데이터 normalization
         data[column] = a_i * data[column] + b_i
-        
+
         # 증가
-        a_num = a_num + 1
-        b_num = b_num + 1
+        a_num, b_num = a_num + 1, b_num + 1
 
     # 정규화된 데이터 저장
     data.to_csv(save_path, index=False, header=False)
