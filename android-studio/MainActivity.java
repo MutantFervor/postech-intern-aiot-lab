@@ -1,8 +1,6 @@
-package com.example.activity_sensor;
+package com.example.activity_sensor_testing;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -14,6 +12,12 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGravity, mGyroscope;
     private TextView textViewValues;
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Button DiscardButton = findViewById(R.id.DiscardButton);
         RadioGroup activityRadioGroup = findViewById(R.id.activityRadioGroup);
         textViewValues = findViewById(R.id.textViewValues);
+        Button MoveToTestButton = findViewById(R.id.MoveToTestButton);
 
         // RadioGroup 상태 변경 리스너
         activityRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
@@ -75,12 +81,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // ****
         DiscardButton.setOnClickListener(v -> {
             if (isSensorsActive) {
-                // 현재 Discard 시점의 timestamp 기록
-                stopTimestamp = System.currentTimeMillis() * 1000L; // 현재 시간을 마이크로초로 변환
-
                 // 각 파일에 대해 startTimestamp ~ stopTimestamp 데이터를 삭제
                 discardCycleData(linearFile);
                 discardCycleData(gravityFile);
@@ -88,14 +90,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 textViewValues.setText("Data discarded for the current cycle.");
 
-                // Cycle 초기화 (선택 사항)
+                // Cycle 초기화
                 startTimestamp = -1;
                 stopTimestamp = -1;
             } else {
                 textViewValues.setText("No active sensor data to discard.");
             }
         });
-        
+
+        MoveToTestButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, TestActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
         // Sensor setting
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -122,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // 센서를 시작하는 함수
     public void startSensor() {
         int samplingRate = 10000;
-        int delayMillis = 5000;  // 5초 딜레이 (밀리초)
+        int delayMillis = 5000;  // 5초 딜레이
 
         textViewValues.setVisibility(TextView.VISIBLE); // 센서 데이터 표시
         textViewValues.setText("Sensor will start in 5 seconds...");
@@ -163,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // event 감지 시에 센서의 행동
     @Override
     public void onSensorChanged(SensorEvent event) {
-        long timestamp = event.timestamp / 1000L; // conversion to microsec (확인 필요)
+        long timestamp = event.timestamp / 1000L; // conversion to microsecond
         float[] value = event.values.clone();
 
         // timestamp 설정
@@ -175,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // 센서 타입별 데이터 포맷팅 및 할당
         String formattedData = String.format(
-                "%d, %d, %.9e, %.9e, %.9e\n", activity_class, timestamp, value[0], value[1], value[2]
+                "%d,%d,%.9e,%.9e,%.9e\n", activity_class, timestamp, value[0], value[1], value[2]
         );
 
         try {
@@ -186,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE && gyroscopeWriter != null) {
                 gyroscopeWriter.write(formattedData);
             }
-            textViewValues.setText("Data is Writing to csv file...");
+            textViewValues.setText("Data is Writing to csv file..."); // csv 파일에 기록되고 있음을 알림
         } catch (IOException e) {
             e.printStackTrace();
             textViewValues.setText("Error writing sensor data.");
@@ -195,6 +203,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // 센서를 종료하는 함수
     public void stopSensor() {
+        delayedStartTimerCancellation();
+
+        // earlyStop 과정 실행 (delay Start 중 실행되면 earlyStop 실행 X)
+        if (startTimestamp != -1) {
+            earlyStop();
+        }
+
+        // cycle 종료 후 변수 초기화
+        startTimestamp = -1;
+        stopTimestamp = -1;
+
+        // 종료 문구 출력
+        textViewValues.setText("Stopped.");
+    }
+
+    // Delay Start 타이머 작업 취소하고 센서 해제
+    public void delayedStartTimerCancellation() {
         // Delay Start 타이머 작업 취소
         if (startSensorRunnable != null) {
             delayHandler.removeCallbacks(startSensorRunnable);
@@ -209,33 +234,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         try {
             if (linearWriter != null) {
                 linearWriter.close();
-                linearWriter = null; // 닫은 후 null로 설정
+                linearWriter = null;
             }
             if (gravityWriter != null) {
                 gravityWriter.close();
-                gravityWriter = null; // 닫은 후 null로 설정
+                gravityWriter = null;
             }
             if (gyroscopeWriter != null) {
                 gyroscopeWriter.close();
-                gyroscopeWriter = null; // 닫은 후 null로 설정
+                gyroscopeWriter = null;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        // earlyStop 과정 실행 (delay Start 중 실행되면 earlyStop 실행 X)
-        if (startTimestamp != -1) {
-            earlyStop();
-        }
-
-        // cycle 종료 후 변수 초기화
-        startTimestamp = -1;
-        stopTimestamp = -1;
-
-        textViewValues.setText("Stopped.");
     }
 
-    // (종료 시) 뒤에서부터 500개의 데이터를 삭제하는 함수 ****
+    // (종료 시) 뒤에서부터 500개의 데이터를 삭제하는 함수
     public void earlyStop() {
         // 각 센서 파일에 대해 최근 500개의 데이터를 삭제
         if (activityFolder == null || !activityFolder.exists()) {
@@ -247,11 +261,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         deleteCycleData(linearFile, 500);
         deleteCycleData(gravityFile, 500);
         deleteCycleData(gyroscopeFile, 500);
-
-        textViewValues.setText("Early stop completed. Last 500 entries from current cycle deleted.");
     }
 
-    // ****
+    // 한 cycle의 data를 삭제하는 함수
     private void deleteCycleData(File file, int n) {
         if (file == null || !file.exists()) return;
 
@@ -271,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 long timestamp = Long.parseLong(tokens[1].trim());
 
                 // 5초 이내: startTimestamp와 stopTimestamp 사이의 데이터는 제외
-                if (stopTimestamp - startTimestamp <= 5_000_000L) {
+                if (stopTimestamp - startTimestamp <= 5000000L) {
                     if (timestamp < startTimestamp || timestamp > stopTimestamp) {
                         filteredLines.add(line);
                     }
@@ -284,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         // 5초 초과일 경우 뒤에서 n개의 데이터만 삭제
-        if (stopTimestamp - startTimestamp > 5_000_000L) {
+        if (stopTimestamp - startTimestamp > 5000000L) {
             if (filteredLines.size() > n) {
                 filteredLines = filteredLines.subList(0, filteredLines.size() - n);
             } else {
@@ -303,40 +315,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // discardCycle data
+    // discard시 해당 Cycle Data를 삭제하는 함수
     private void discardCycleData(File file) {
-        // Delay Start 타이머 작업 취소
-        if (startSensorRunnable != null) {
-            delayHandler.removeCallbacks(startSensorRunnable);
-        }
-
-        mSensorManager.unregisterListener(this, mAccelerometer);
-        mSensorManager.unregisterListener(this, mGravity);
-        mSensorManager.unregisterListener(this, mGyroscope);
-        isSensorsActive = false;
-
-        // Close file writers
-        try {
-            if (linearWriter != null) {
-                linearWriter.close();
-                linearWriter = null; // 닫은 후 null로 설정
-            }
-            if (gravityWriter != null) {
-                gravityWriter.close();
-                gravityWriter = null; // 닫은 후 null로 설정
-            }
-            if (gyroscopeWriter != null) {
-                gyroscopeWriter.close();
-                gyroscopeWriter = null; // 닫은 후 null로 설정
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        delayedStartTimerCancellation();
 
         if (file == null || !file.exists()) return;
-
         List<String> filteredLines = new ArrayList<>();
-        boolean inCurrentCycle = false;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
@@ -368,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // 실행 도중 RadioButton 변경 시도 시
+    // 실행 도중 RadioButton 변경 시도 시 막는 함수
     private void showStopFirstPopup() {
         Toast.makeText(this, "Please stop the current activity before changing.", Toast.LENGTH_SHORT).show();
     }

@@ -1,110 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- RadioGroup -->
-    <RadioGroup
-        android:id="@+id/activityRadioGroup"
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="0dp"
-        android:layout_height="380dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@id/StartStopButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <RadioButton
-            android:id="@+id/OtherButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Other" />
-
-        <RadioButton
-            android:id="@+id/WalkingButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Walking" />
-
-        <RadioButton
-            android:id="@+id/RunningButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Running" />
-
-        <RadioButton
-            android:id="@+id/StandingButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Standing" />
-
-        <RadioButton
-            android:id="@+id/SittingButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sitting" />
-
-        <RadioButton
-            android:id="@+id/UpstairsButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Upstairs" />
-
-        <RadioButton
-            android:id="@+id/DownstairsButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Downstairs" />
-    </RadioGroup>
-
-    <!-- Start/Stop Button -->
-    <Button
-        android:id="@+id/StartStopButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Start / Stop"
-        app:layout_constraintTop_toBottomOf="@id/activityRadioGroup"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+        android:fillViewport="true"> <!-- Viewport 채우기 -->
 
-    <!-- Pause/Resume Button -->
-    <!--<Button
-        android:id="@+id/PauseResumeButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Pause / Resume"
-        app:layout_constraintTop_toBottomOf="@id/StartStopButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" /> -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <!-- Discard Button -->
-    <Button
-        android:id="@+id/DiscardButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Discard"
-        app:layout_constraintTop_toBottomOf="@id/StartStopButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+            <!-- RadioGroup -->
+            <RadioGroup
+                android:id="@+id/activityRadioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                app:layout_constraintBottom_toTopOf="@id/StartStopButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-    <!-- TextView -->
-    <TextView
-        android:id="@+id/textViewValues"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Sensor Values"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
+                <!--
+                <RadioButton
+                    android:id="@+id/OtherButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Other" /> -->
+
+                <RadioButton
+                    android:id="@+id/WalkingButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Walking" />
+
+                <RadioButton
+                    android:id="@+id/RunningButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Running" />
+
+                <RadioButton
+                    android:id="@+id/StandingButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Standing" />
+
+                <RadioButton
+                    android:id="@+id/SittingButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Sitting" />
+
+                <RadioButton
+                    android:id="@+id/UpstairsButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Upstairs" />
+
+                <RadioButton
+                    android:id="@+id/DownstairsButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Downstairs" />
+            </RadioGroup>
+
+            <!-- Start/Stop Button -->
+            <Button
+                android:id="@+id/StartStopButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Start / Stop"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/activityRadioGroup" />
+
+            <!-- Discard Button -->
+            <Button
+                android:id="@+id/DiscardButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Discard"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/StartStopButton" />
+
+            <Button
+                android:id="@+id/MoveToTestButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Move to Test Page"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/DiscardButton" />
+
+            <!-- TextView -->
+            <TextView
+                android:id="@+id/textViewValues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="Status"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/MoveToTestButton" />
+        </LinearLayout>
+    </ScrollView>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
